@@ -50,7 +50,7 @@ func (c *CandleService) Last(symbol string, resolution common.CandleResolution) 
 	return cs, nil
 }
 
-// History - retrieves all candles (Max=1000) with the given symbol and the given candle resolution
+// History - retrieves all candles (Max=10,000) with the given symbol and the given candle resolution
 // See https://docs.bitfinex.com/reference#rest-public-candles for more info
 func (c *CandleService) History(symbol string, resolution common.CandleResolution) (*candle.Snapshot, error) {
 	segments, err := getPathSegments(symbol, resolution)
@@ -72,7 +72,8 @@ func (c *CandleService) History(symbol string, resolution common.CandleResolutio
 	return cs, nil
 }
 
-// HistoryWithQuery - retrieves all candles (Max=1000) that fit the given query criteria
+// HistoryWithQuery - retrieves all candles (Max=10,000) that fit the given query criteria
+// Pass 0 value for start, end, limit or sort, to exclude field from the query
 // See https://docs.bitfinex.com/reference#rest-public-candles for more info
 func (c *CandleService) HistoryWithQuery(
 	symbol string,
@@ -89,10 +90,18 @@ func (c *CandleService) HistoryWithQuery(
 
 	req := NewRequestWithMethod(path.Join("candles", segments, "HIST"), "GET")
 	req.Params = make(url.Values)
-	req.Params.Add("end", strconv.FormatInt(int64(end), 10))
-	req.Params.Add("start", strconv.FormatInt(int64(start), 10))
-	req.Params.Add("limit", strconv.FormatInt(int64(limit), 10))
-	req.Params.Add("sort", strconv.FormatInt(int64(sort), 10))
+	if end != 0 {
+		req.Params.Add("end", strconv.FormatInt(int64(end), 10))
+	}
+	if start != 0 {
+		req.Params.Add("start", strconv.FormatInt(int64(start), 10))
+	}
+	if limit != 0 {
+		req.Params.Add("limit", strconv.FormatInt(int64(limit), 10))
+	}
+	if sort != 0 {
+		req.Params.Add("sort", strconv.FormatInt(int64(sort), 10))
+	}
 
 	raw, err := c.Request(req)
 	if err != nil {
